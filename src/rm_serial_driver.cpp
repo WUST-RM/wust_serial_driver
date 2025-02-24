@@ -223,12 +223,12 @@ void RMSerialDriver::sendDataTwist(const geometry_msgs::msg::Twist::SharedPtr ms
 {
   try {
     SendPacketTwist packet;
-    packet.linear_x = 0.35*msg->linear.x;
-    packet.linear_y =0.35 *msg->linear.y;
-    packet.linear_z =0.5* msg->linear.z;
-    packet.angular_x =0.5* msg->angular.x;
-    packet.angular_y = 0.5*msg->angular.y;
-    packet.angular_z = 0.5*msg->angular.z;
+    packet.linear_x = vel_ratio * msg->linear.x;
+    packet.linear_y =vel_ratio * msg->linear.y;
+    packet.linear_z =vel_ratio * msg->linear.z;
+    packet.angular_x =vel_ratio * msg->angular.x;
+    packet.angular_y = vel_ratio * msg->angular.y;
+    packet.angular_z = vel_ratio * msg->angular.z;
     crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
 
     std::vector<uint8_t> data = toVector(packet);
@@ -251,6 +251,8 @@ void RMSerialDriver::getParams()
   auto fc = FlowControl::NONE;
   auto pt = Parity::NONE;
   auto sb = StopBits::ONE;
+
+  vel_ratio=this->declare_parameter("vel_ratio",0.35);
 
   try {
     device_name_ = declare_parameter<std::string>("device_name", "");
