@@ -22,8 +22,8 @@
 #include <thread>
 #include <vector>
 
-#include "auto_aim_interfaces/msg/target.hpp"
-#include "auto_aim_interfaces/msg/time_and_health.hpp"
+#include "wust_interfaces/msg/target.hpp"
+#include "wust_interfaces/msg/referee.hpp"
 #include <geometry_msgs/msg/twist.hpp>  
 
 namespace rm_serial_driver
