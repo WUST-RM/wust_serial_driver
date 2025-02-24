@@ -3,7 +3,7 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
-#include <auto_aim_interfaces/msg/detail/time_and_health__struct.hpp>
+
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
 #include <rclcpp/utilities.hpp>
