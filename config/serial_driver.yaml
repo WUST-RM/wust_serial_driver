@@ -5,4 +5,5 @@
     flow_control: none
     parity: none
     stop_bits: "1"
+    vel_ratio : 0.35
 
