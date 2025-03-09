@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <wust_interfaces/msg/referee.hpp>
 
 #include "rm_serial_driver/crc.hpp"
 #include "rm_serial_driver/packet.hpp"
@@ -40,7 +41,7 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
   // Create Publisher
   latency_pub_ = this->create_publisher<std_msgs::msg::Float64>("/latency", 10);
   marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/aiming_point", 10);
-  referee_pub_= this->create_publisher<auto_aim_interfaces::msg::TimeAndHealth>("/referee", 10);
+  referee_pub_= this->create_publisher<wust_interfaces::msg::Referee>("/referee", 10);
   
 
   // Detect parameter client
@@ -101,8 +102,9 @@ void RMSerialDriver::receiveData()
 {
   std::vector<uint8_t> header(1);
   std::vector<uint8_t> data;
+  std::vector<uint8_t> data0;
   data.reserve(sizeof(ReceivePacket));
-
+  data0.reserve(sizeof(ReceivePacketrefree));
   while (rclcpp::ok()) {
     try {
       serial_driver_->port()->receive(header);
@@ -118,19 +120,7 @@ void RMSerialDriver::receiveData()
           crc16::Verify_CRC16_Check_Sum(reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
         if (crc_ok) {
 
-          // RCLCPP_INFO(get_logger(), "CRC OK!");
-
-          // LOG [Receive] aim_xyz
-          // RCLCPP_INFO(get_logger(), "[Receive] aim_pitch %f!", packet.aim_x);
-          // RCLCPP_INFO(get_logger(), "[Receive] aim_yaw %f!", packet.aim_y);
-          // RCLCPP_INFO(get_logger(), "[Receive] aim_roll %f!", packet.aim_z);
           
-          // LOG [Receive] [Receive] rpy
-          // RCLCPP_INFO(get_logger(), "[Receive] roll %f!", packet.roll);
-          // RCLCPP_INFO(get_logger(), "[Receive] pitch %f!", packet.pitch);
-          // RCLCPP_INFO(get_logger(), "[Receive] yaw %f!", packet.yaw);
-
-          // RCLCPP_INFO(get_logger(), "----------------------------");
 
           if (!initial_set_param_ || packet.detect_color != previous_receive_color_) {
             setParam(rclcpp::Parameter("detect_color", packet.detect_color));
@@ -158,19 +148,33 @@ void RMSerialDriver::receiveData()
             aiming_point_.pose.position.z = packet.aim_z;
             marker_pub_->publish(aiming_point_);
           }
-          referee_.header.stamp = this->now();
-          referee_.health= packet.health;
-          referee_.time= packet.time;
-          referee_.enable17mm= packet.enable17mm;
-          referee_.score= packet.score;
-          referee_.model= packet.model;
-          referee_pub_->publish(referee_);
+         
         } else {
           RCLCPP_ERROR(get_logger(), "CRC error!");
         }
       } else {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 20, "Invalid header: %02X", header[0]);
       }
+      if(header[0] == 0x4A)
+      {data0.resize(sizeof(ReceivePacketrefree) - 1);
+        serial_driver_->port()->receive(data0);
+
+        data0.insert(data0.begin(), header[0]);
+        ReceivePacketrefree packet = fromVector0(data0);
+
+        bool crc_ok =
+          crc16::Verify_CRC16_Check_Sum(reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
+        if (crc_ok) {
+
+          wust_interfaces::msg::Referee ref;
+          ref.header.stamp = this->now();
+          ref.health = packet.health;
+          ref.model = packet.mode;
+          ref.time = packet.time;
+          referee_pub_->publish(ref);
+          
+      }
+    }
     } catch (const std::exception & ex) {
       RCLCPP_ERROR_THROTTLE(
         get_logger(), *get_clock(), 20, "Error while receiving data: %s", ex.what());

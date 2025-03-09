@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <opencv4/opencv2/core/cvdef.h>
 #include <vector>
 
 namespace rm_serial_driver
@@ -22,13 +23,24 @@ struct ReceivePacket
   float aim_x;
   float aim_y;
   float aim_z;
-  int time;
-  int health;
-  int enable17mm;
-  int score;
-  int model;
+
+  // int time;
+  // int health;
+  // int enable17mm;
+  // int score;
+  // int model;
   uint16_t checksum = 0;
 } __attribute__((packed));
+struct ReceivePacketrefree
+{
+  uint8_t header = 0x4A;
+  int time;
+  int health;
+  int mode;
+  
+
+
+}__attribute__((packed));
 
 struct SendPacket
 {
@@ -68,7 +80,12 @@ inline ReceivePacket fromVector(const std::vector<uint8_t> & data)
   std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
   return packet;
 }
-
+inline ReceivePacketrefree fromVector0(const std::vector<uint8_t> & data)
+{
+  ReceivePacketrefree packet;
+  std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
+  return packet;
+}
 // inline std::vector<uint8_t> toVector(const SendPacket & data)
 // {
 //   std::vector<uint8_t> packet(sizeof(SendPacket));

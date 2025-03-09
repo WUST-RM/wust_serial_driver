@@ -22,9 +22,10 @@
 #include <thread>
 #include <vector>
 
-#include "wust_interfaces/msg/target.hpp"
-#include "wust_interfaces/msg/referee.hpp"
+#include "auto_aim_interfaces/msg/target.hpp"
+
 #include <geometry_msgs/msg/twist.hpp>  
+#include <wust_interfaces/msg/referee.hpp>
 
 namespace rm_serial_driver
 {
@@ -70,7 +71,7 @@ private:
 
   // Aimimg point receiving from serial port for visualization
   visualization_msgs::msg::Marker aiming_point_;
-  auto_aim_interfaces::msg::TimeAndHealth referee_;
+  wust_interfaces::msg::Referee referee_;
   // Broadcast tf from odom to gimbal_link
   double timestamp_offset_ = 0;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -82,7 +83,7 @@ private:
   // For debug usage
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
-  rclcpp::Publisher<auto_aim_interfaces::msg::TimeAndHealth>::SharedPtr referee_pub_;
+  rclcpp::Publisher<wust_interfaces::msg::Referee>::SharedPtr referee_pub_;
 
   std::thread receive_thread_;
 };
